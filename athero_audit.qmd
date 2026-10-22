@@ -1,0 +1,266 @@
+---
+title: "RNA-seq to Antibody Sequences: Audit and Redesign Plan"
+subtitle: "ASCVD humoral-immunity project (GSE166780 discovery, GSE173983 validation)"
+author: "Abhijna R Chandra"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    number-sections: true
+    theme: cosmo
+    code-fold: false
+    self-contained: true
+    callout-appearance: simple
+execute:
+  echo: false
+  warning: false
+---
+
+# Purpose and scope {#sec-scope}
+
+This is a working plan for auditing the first part of the project and redoing it to a publishable standard. 
+
+::: {.callout-note}
+## In scope
+Public bulk PBMC RNA-seq → quality control → BCR reconstruction → V(D)J annotation → repertoire characterisation → selection of candidate antibody sequences.
+:::
+
+# Guiding principles for the redo {#sec-principles}
+
+1. **Evidence must connect to candidates.** Every claim about expansion, selection or disease association should be traceable to the specific sequences carried forward.
+2. **Every selection step needs a null.** A filter is only informative if one knows what it would produce when there is no disease effect - NOT FOR NOW, clear what exactly the groups being compared are.
+
+# Concept map {#sec-concept}
+
+```{mermaid}
+%%| fig-width: 8
+flowchart TD
+    A[Dataset selection and provenance] --> B[Raw data QC]
+    B --> C[BCR reconstruction]
+    C --> D[Annotation and standardisation]
+    D --> E[Per-sample quality assessment]
+    E --> F[Repertoire characterisation]
+    E --> G[Candidate selection]
+    F --> G
+    G --> H[Final antibody sequence set with provenance]
+    N[Negative and positive controls] -.-> C
+    N -.-> E
+    X[Confounder estimation: depth, B-cell content, cohort] -.-> F
+    X -.-> G
+    P[Null models and permutation] -.-> G
+```
+
+# Audit areas {#sec-audit}
+
+## Dataset provenance and cohort design {#sec-a1}
+
+**Question.** Are the samples what the project assumes they are, and are the groups comparable?
+
+**Why it matters.** Every downstream result inherits any mismatch between assumed and actual sample type, group definition or cohort structure.
+
+
+- [ ] Confirm what "control" means in each cohort (healthy versus patients without the disease phenotype)- use UMAP, PCA or other dimensionality reduction to visualise group separation.
+- [ ] Reconcile sample counts across all documents, and give every sample one entry in a single manifest.
+- [ ] Decide the role of the intermediate (mild) group and whether it belongs in the comparison at all.
+- [ ] Record available covariates (age, sex, medication, timing of sampling) and whether they differ between groups-mention only lifestyle effects, no mention covariates.
+- [ ] Document the dataset screening process in a reproducible, repeatable form
+
+**Possible outcome.** Redefine groups, add covariates, or replace or add cohorts.
+
+## Reconstruction route- FOR LATER +DP {#sec-a2}
+
+**Question.** Is the BCR reconstruction accurate, and is there one clearly defined primary route?
+
+**Why it matters.** Two parallel tools were run in separate projects and never reconciled, so neither route is validated.
+
+- [ ] Run reconstruction tools inside one versioned workflow with a shared sample sheet.
+- [ ] Measure agreement between tools per sample (chains recovered, shared CDR3s, clone-frequency correlation).
+- [ ] Use agreement to define a high-confidence set versus tool-specific calls.
+- [ ] Test sensitivity: simulated reads from known immunoglobulin sequences, or a dataset with matched repertoire sequencing.
+- [ ] Test specificity: run the same workflow on RNA-seq from non-B-cell material to estimate false-positive calls.
+- [ ] Review whether read preprocessing could shorten or discard reads that span CDR3.
+
+**Possible outcome.** Choose a primary tool, or adopt a consensus approach.
+
+## Filtering and attrition logic {#sec-a3}
+
+**Question.** Why does the sequence set shrink so much, and is each step justified?
+
+**Why it matters.** The criteria that remove most contigs were never stated, so reviewers cannot judge whether the final set is biased toward particular samples, chains or clones.
+- [ ] PSUEDO SEQ?? or CDR3-based filtering: clarify which is used and why. Statistics of CDR3 lengths and distributions should be reported. Deviation etc should be quantified and visualised. 
+- [ ] CDR3 3mer encoding, mention phsyiochemical properties of CDR3, based on this clustering to be done - best by DECEMBER 
+- [ ] Produce a per-sample attrition table from reads to final sequences, with the reason for each loss.
+- [ ] Check whether attrition differs by group, cohort or sequencing depth.
+- [ ] Explain the large difference in contig yield per sample between cohorts (depth, library, tool settings or biology).
+- [ ] Justify each filter on biological or technical grounds and show how conclusions change when it is relaxed or tightened.
+- [ ] Track unexplained losses between the filtered contig set and the final heavy- and light-chain sets.
+
+**Possible outcome.** Replace ad hoc filters with documented, defensible criteria.
+
+## Annotation consistency and sequence identity {#sec-a4}
+
+**Question.** Are V(D)J calls and sequence identifiers consistent across tools and files?
+
+**Why it matters.** Reconstruction tools and IgBLAST can disagree, reference databases differ between runs, and the same sequence currently appears under several names.
+
+- [ ] Compare gene calls and CDR3 between the reconstruction tool, IgBLAST and an independent annotator.
+- [ ] Standardise on one germline reference release and report it.
+- [ ] Convert everything to a standard repertoire format (AIRR).
+- [ ] Define one identifier scheme linking sample, contig, V/J, CDR3, abundance and isotype.
+- [ ] Use consistent terminology for heavy-chain variable domains throughout.
+
+**Possible outcome.** A single annotated table that is the source of truth for every figure.
+
+## Validity of repertoire metrics {#sec-a5}
+
+**Question.** Do the diversity, clonality and isotype results reflect biology rather than depth, abundance or cohort?
+
+**Why it matters.** In bulk RNA-seq, read-count-based "expansion" can reflect plasmablast content or sequencing depth, and clone-size bins are sensitive to both.
+
+- [ ] Replace read-count bins with depth-corrected, coverage-based diversity.
+- [ ] Estimate B-cell and plasmablast content from the same data and adjust or stratify.
+- [ ] Re-examine clone-size definitions and whether they mean cell expansion or transcript abundance.
+- [ ] Add statistics to every group comparison, with effect sizes and uncertainty.
+- [ ] Analyse each cohort separately, then combine at the level of effect estimates rather than pooled samples.
+- [ ] Reconcile the isotype findings with the antigen-driven narrative: higher IgM alone is weak evidence of antigen-driven expansion.
+
+
+**Possible outcome.** The expansion and reduced-diversity claims are confirmed, weakened, or reframed.
+
+## Disease-specific candidate selection {#sec-a6}
+
+**Question.** Does removing sequence clusters seen in controls enrich for disease-associated antibodies, or just for private clones?
+
+**Why it matters.** The approach was designed for immunised versus naive animals. In outbred humans most clones are private, so "absent from controls" can arise by chance.
+
+- [ ] Build a null: permute group labels, or treat each control in turn as a pseudo-case against the rest, and count how many "exclusive" clusters appear.
+- [ ] Compare the observed count against that null, per cohort.
+- [ ] Review whether clustering on CDR-only pseudo-sequences merges unrelated lineages (different V genes), and whether whole-chain clustering gives the same answer.
+- [ ] Consider candidate definitions based on several properties (abundance, mutation, class switching, group enrichment) rather than control absence alone.
+- [ ] Assess whether depth differences between samples bias which clusters appear exclusive.
+
+**Possible outcome.** Keep the approach with justification, modify it, or replace it with a multi-criteria definition.
+
+## Link between evidence and candidates {#sec-a7}
+
+**Question.** Are the sequences that proceed the same clones that show the repertoire-level signal?
+
+**Why it matters.** Expansion evidence and candidate sequences came from different tools and different steps. A candidate could be a rare clone, and the narrative "expanded clones become the studied antibodies" is unproven.
+
+- [ ] For every candidate chain, report abundance, clone size, isotype and mutation level.
+- [ ] Show where candidates sit within the sample's overall repertoire.
+- [ ] Ensure the same reconstruction run supports both the repertoire analysis and the candidate list.
+
+**Possible outcome.** Candidates are re-ranked or re-chosen so they are demonstrably the clones of interest.
+
+## Statistical design and reporting {#sec-a9}
+
+**Question.** Is the inference appropriate for very small cohorts?
+
+- [ ] Prefer non-parametric and permutation-based inference over parametric tests on skewed metrics.
+- [ ] Treat the smallest cohort as descriptive validation, not as confirmatory.
+- [ ] Control multiple testing across metrics.
+- [ ] Specify the analysis and candidate criteria before group comparisons.
+- [ ] Report negative and null findings, including metrics that did not differ.
+
+# Routes: keep, revise or replace {#sec-routes}
+
+| Element | Current approach | Recommendation | Reason |
+|---|---|---|---|
+| Annotation | Multiple annotators, several reference releases | **Revise**: standardise and cross-check | Consistency and reproducibility |
+| Clone-size bins | Read-count based groups | **Replace** with depth-corrected metrics | Sensitive to depth and plasmablast content |
+| Group comparison | Pooled across cohorts | **Replace** with per-cohort analysis then combination | Cohort confounds disease |
+| Disease-exclusive filter | Remove clusters seen in controls | **Revise**: add a null and multi-criteria definition | Chance exclusivity in private repertoires |
+| Candidate definition | Absence from controls | **Replace** with abundance, mutation, class-switch and enrichment | Links evidence to candidates |
+| Sample accounting | Several inconsistent counts | **Replace** with one manifest | Traceability |
+| Statistics | Parametric tests, no null | **Revise** | Small n, skewed metrics |
+| Control experiments | None | **Add** negative and positive controls | Quantifies false calls and sensitivity |
+| Paired-chain claims | Inferred from bulk data | **Reword** as predicted | Bulk data lose pairing |
+
+# BCR analysis tools to explore {#sec-tools}
+
+| Purpose | Tool(s) | Why relevant to these datasets |
+|---|---|---|
+| Reconstruction from RNA-seq | TRUST4, MiXCR | Established tools for bulk RNA-seq; compare for agreement |
+| Annotation | IgBLAST, IMGT/HighV-QUEST | Independent V(D)J assignment and CDR boundaries |
+| Standardised tables | Change-O, AIRR format | One analysis-ready table for all downstream steps |
+| Clonal grouping | SCOPer | Principled clone definitions beyond CDR-only clustering |
+| Mutation and selection | SHazaM (including BASELINe) | Tests for antigen-driven selection, which the current analysis lacks |
+| Diversity and properties | Alakazam, iNEXT, immunarch | Coverage-based diversity and physicochemical features |
+| Lineage structure | Dowser, IgPhyML | Clonal family trees for expanded, mutated clones |
+| Cross-sample comparison | VDJtools, immunarch | Repertoire overlap and gene-usage comparison |
+| Confounder estimation | CIBERSORTx, xCell, GSVA on plasmablast and B-cell markers | Separates B-cell abundance from repertoire shape |
+| Sequence plausibility | Antibody language models (e.g. AbLang2) | Optional screen for unusual or artefactual reconstructed chains |
+| Workflow | Nextflow with containers | Reproducible, single-route pipeline |
+
+# Metrics to explore {#sec-metrics}
+
+## Per-sample quality
+
+- Fraction of reads mapping to immunoglobulin loci
+- Number of contigs, productive contigs and complete-CDR3 contigs
+- Kappa-to-lambda ratio as a plausibility check
+- Concordance between reconstruction tools
+- Signs of cross-sample contamination (identical high-abundance sequences in unrelated samples)
+
+## Diversity and clonality
+
+- Coverage-based Hill diversity across orders of diversity
+- Richness estimators, Gini and Pielou evenness
+- Dominance of the largest clones and the share held by the top clones
+- Rarefaction or depth-matched comparisons
+
+## Antigen-driven features
+
+- Somatic hypermutation frequency in the variable region
+- Selection strength in CDRs versus frameworks
+- Isotype composition, including class-switched fractions and IgG-to-IgM balance
+- Mutation load within expanded clones
+- Clonal lineage size and structure
+
+## Repertoire structure
+
+- V and J gene usage, with a divergence measure between groups
+- CDR3 length distribution
+- CDR3 physicochemical properties (charge, hydrophobicity, aromaticity)
+- Clonal convergence across individuals, tested against a null
+
+## Candidate-level summary
+
+- Abundance, clone size, isotype and mutation level per candidate
+- Whether each candidate is supported by more than one tool
+- Enrichment in disease versus control relative to the permutation null
+
+## Confounder metrics
+
+- B-cell and plasmablast signature scores per sample
+- Sequencing depth and library characteristics
+- Cohort, age, sex and treatment where available
+
+# Suggested order of work {#sec-order}
+
+1. Fix the sample manifest and cohort definitions.
+2. Build the unified, versioned pipeline and add negative and positive controls.
+3. Standardise annotation and the identifier scheme.
+4. Produce the per-sample quality and attrition summary.
+5. Estimate confounders (depth, B-cell and plasmablast content).
+6. Redo repertoire characterisation with depth-corrected metrics and appropriate statistics.
+7. Add mutation, selection, isotype and lineage analyses.
+8. Build the null model for disease-exclusive selection, then set the candidate definition.
+9. Link every candidate back to its repertoire evidence and finalise the sequence table.
+10. Freeze the analysis, archive the provenance and only then move on to later stages.
+
+# What the manuscript should say about limits {#sec-limits}
+
+- Reconstruction is from bulk RNA, so heavy and light chains are not natively paired.
+- Repertoire differences are associations in small cohorts and are not proof of antigen specificity.
+- Dataset screening and exclusion criteria are reported transparently.
+- Cohort differences are modelled or acknowledged.
+
+# Reference points {#sec-refs}
+
+- Seo K, Choi JK. Comprehensive analysis of TCR and BCR repertoires: insights into methodologies, challenges, and applications. *Genomics & Informatics* 2025;23:6. Useful background for template choice, bulk versus single-cell trade-offs and tool overview, but light on BCR-specific analysis.
+- Saputri et al. *mSystems* 2023. Source of the pseudo-sequence clustering approach, originally designed for immunised versus control animals.
+- Song et al. *Front Immunol* 2022 (GSE166780) and Vancheri et al. *Genes* 2021 (GSE173983). Source papers for the datasets; recheck sample type and design.

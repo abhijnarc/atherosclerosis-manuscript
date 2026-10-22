@@ -1,0 +1,148 @@
+---
+title: "Manuscript Skeleton, Figure Plan and Three-Month Roadmap"
+subtitle: "Antigen-driven humoral immunity signatures in ASCVD from public RNA-seq"
+author: "Abhijna R Chandra"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    number-sections: true
+    theme: cosmo
+    self-contained: true
+execute:
+  echo: false
+  warning: false
+---
+
+
+::: {.callout-note}
+## Where the project stands
+The original work went from public blood RNA-seq to reconstructed antibody sequences, then to modelling and hierarchical docking against a literature-selected antigen panel. The audit found gaps in the first part (RNA-seq to antibody sequences) that must be fixed before the antigen-dependent work can be trusted. The roadmap therefore redoes the blood analysis first (October), consolidates the antigen-dependent and structural work on that foundation (November), and extends to tissue data and manuscript consolidation (December).
+:::
+
+# Proposed framing {#sec-framing}
+
+## Central question
+
+Can antigen-driven B-cell responses in coronary artery disease be detected from public RNA-seq without dedicated antibody experiments, and can the resulting antibody candidates be examined for compatibility with known atherosclerosis autoantigens?
+
+## Rationale carried over from the presentation
+
+- Atherosclerosis is an immune-mediated disease and not only a lipid disorder: lipid modification (oxLDL) triggers chronic inflammation, and adaptive immunity shapes plaque progression and stability.
+- B cells contribute through antibody production, antigen presentation and cytokines. Chronic exposure to modified self-antigens (oxLDL, ApoB100, HSP60/65, β2-glycoprotein I, PCSK9) is thought to drive clonal expansion and affinity maturation.
+- Autoantibodies can be pathogenic or protective, and the isotype (for example IgG versus IgM) matters.
+- Current blood markers (lipids, CRP, IL-6, fibrinogen, D-dimer) say little about the underlying immune mechanism.
+- Gap: there is no scalable way to link circulating B-cell receptor repertoires to disease biology, and public RNA-seq is an under-used resource.
+
+## Aims (proposed)
+
+1. Reconstruct BCR repertoires from blood RNA-seq in two independent coronary artery disease cohorts, with an explicit cross-check between two reconstruction tools.
+2. Characterise diversity, clonality, V/J usage, CDR3 properties and isotype, controlling for depth and B-cell content.
+3. Prioritise candidate disease-associated antibody sequences with transparent, null-tested criteria.
+4. Assess candidate compatibility with literature-selected atherosclerosis antigens, with a small structural-modelling pilot treated as hypothesis-generating.
+5. Extend the workflow to a manageable tissue RNA-seq dataset and compare with blood only where the designs allow (?).
+
+# Manuscript skeleton {#sec-skeleton}
+
+## Abstract
+
+Written last, once claims are fixed.
+
+## Introduction
+
+1. ASCVD as an immune-mediated disease (verified statistics).
+2. B cells, autoantibodies and key autoantigens; pathogenic versus protective roles.
+3. Limits of current blood markers.
+4. Repertoire analysis from bulk RNA-seq: what it can and cannot do (loss of chain pairing, depth and abundance effects).
+5. Gap and aims.
+
+## Methods
+
+1. **Dataset identification**, presented as a reproducible funnel (T1, T15).
+2. **Cohorts**: source, platform, groups, covariates, analysed samples (T1).
+3. **Preprocessing, reconstruction and annotation**: two tools, versions, references, consensus logic (T2–T4).
+4. **Per-sample quality assessment** and controls.
+5. **Repertoire analysis**: diversity, clonality, V/J usage, CDR3 properties, isotype, mutation (T5).
+6. **Statistics**: pre-specified comparisons, per-cohort analysis, cohort limitations (T6).
+7. **Candidate prioritisation**: criteria and null model (T9).
+8. **Antigen-dependent analysis**: antigen list, structure provenance, pairing and docking methods (T8, T10).
+9. **Structural modelling pilot**: AlphaFold/AlphaFold-Multimer design, chain setup, antigen constructs, confidence metrics (T11, T12).
+10. **Tissue extension**: dataset selection, processing, reconstruction (T15–T18).
+11. **Reproducibility**: workflow, containers, run log (T21).
+
+## Results
+
+1. Datasets and workflow overview.
+2. Reconstruction quality and agreement between tools.
+3. Blood repertoire diversity and clonality, per cohort.
+4. Antigen-driven features: mutation, selection, isotype.
+5. Gene usage and CDR3 properties.
+6. Candidate prioritisation and relationship to the repertoire signal.
+7. Candidate–antigen analysis (refreshed).
+8. Structural modelling pilot (hypothesis-generating).
+9. Tissue repertoires and blood–tissue comparison *(Tier 3, conditional)*.
+
+## Discussion
+
+- What the data do and do not show; clonal expansion is not by itself proof of antigen specificity.
+- Comparison with prior repertoire studies.
+- Limits: bulk data without native pairing, small cohorts (especially GSE173983), cohort and protocol differences, no clinical outcome data, literature-driven antigen panel, no wet-lab validation, predicted structures as hypotheses.
+- Future work, including a South Asian cohort study and experimental validation.
+
+## Supplementary material
+
+Per-sample attrition and QC tables, tool concordance, confounder analyses, sensitivity analyses, version table, run log and manifest.
+
+# Figure plan {#sec-figures}
+
+| Figure | Content | Tasks | Tier |
+|---|---|---|---|
+| **Fig. 1** | Study design: dataset selection funnel and workflow | T1, T7 | 1 |
+| **Fig. 2** | Reconstruction quality: immunoglobulin read fraction, chains recovered per sample, TRUST4–MiXCR agreement | T2–T4 | 1 |
+| **Fig. 3** | Diversity and clonality by group, per cohort, depth-corrected, with statistics | T5, T6 | 1 |
+| **Fig. 4** | Antigen-driven features: mutation, selection, isotype | T5 | 1 |
+| **Fig. 5** | V/J usage and CDR3 length and properties | T5 | 1 |
+| **Fig. 6** | Candidate prioritisation: null model, selection criteria, candidate attributes | T9 | 1 |
+| **Fig. 7** | Candidate–antigen table and summary figures, with antigen provenance | T8, T10 | 2 |
+| **Fig. 8** | AlphaFold pilot compared with existing docking, with confidence metrics | T12, T13 | 2 |
+| **Fig. 9** | Tissue repertoire results and blood–tissue comparison | T16–T19 | 3 |
+
+**Supplementary**
+
+- S1: per-sample attrition from reads to final sequences.
+- S2: per-sample QC and negative-control results.
+- S3: confounder estimates (depth, B-cell and plasmablast content).
+- S4: annotation concordance between tools and reference releases.
+- S5: sensitivity analyses.
+- S6: antigen-dependent inventory (what was complete, rerun or unreliable).
+- S7: tissue dataset screening table.
+- T1: master cross-dataset table (samples, groups, covariates, metrics).
+- T2: software and reference versions.
+
+**Design principles**
+
+- Show individual samples, not only summary bars, because cohorts are small.
+- Show the two blood cohorts side by side and never pool them as raw samples.
+- Do not pool tissue and blood designs that are incompatible.
+- State on every figure which tool and reference version produced it.
+- Label predicted structures and docking scores as predictions.
+
+# Risks and mitigation {#sec-risks}
+
+| Risk | Why it matters | Mitigation |
+|---|---|---|
+| Redo changes repertoire results | The biological narrative may change | Frame around verified results; keep the workflow emphasis |
+| Candidate selection does not beat the null | The disease-exclusive claim fails | Multi-criteria definition, or report the negative result |
+| Existing antigen-dependent outputs depend on the old sequence set | Results may be invalid | T8 triage into complete, needs rerun, not reliable |
+| Tissue data differ in immune-cell abundance and protocol | Invalid comparisons | One manageable dataset; compare only where designs allow |
+| Very small validation cohort | Cannot be confirmatory | Present as descriptive replication |
+| Effort exceeds available time in November and December | Unfinished analyses everywhere | Cut Tier 3 first, then reduce Tier 2 |
+
+# Reference {#sec-refs}
+
+- Seo K, Choi JK. Comprehensive analysis of TCR and BCR repertoires: insights into methodologies, challenges, and applications. *Genomics & Informatics* 2025;23:6. Background for template choice, bulk versus single-cell trade-offs and tool overview.
+- Saputri et al. *mSystems* 2023. Origin of the pseudo-sequence clustering approach (designed for immunised versus control animals).
+- Song et al. *Front Immunol* 2022 (GSE166780) and Vancheri et al. *Genes* 2021 (GSE173983). Dataset source papers.
+- Literature cited in the presentation for autoantigen and autoantibody background should be re-verified and moved into the reference list during drafting.
